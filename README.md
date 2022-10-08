@@ -2,7 +2,7 @@
 
 [Neo4j](https://github.com/neo4j) graph visualization using [D3.js](https://github.com/d3/d3).
 
-![neo3jd3.js](https://eisman.github.io/neo4jd3/img/neo4jd3.jpg?v=0.0.5)
+!Forked from [neo3jd3.js](https://eisman.github.io/neo4jd3/img/neo4jd3.jpg?v=0.0.5)
 
 ## Features
 
@@ -17,20 +17,10 @@
 * Highlight nodes on init.
 * Relationship auto-orientation.
 * Zoom, pan, auto fit.
-* Compatible with D3.js v4.
 
-## Running
+## Enhancements to do
+* Compatible with D3.js v7.
 
-First of all, make sure you have ruby and sass gem installed. Then, clone the repository, install all dependencies, build and serve the project.
-
-```bash
-> gem install sass
-> git clone https://github.com/eisman/neo4jd3.git
-> npm install
-> gulp
-```
-
-Open `http://localhost:8080` in your favorite browser.
 
 ## Documentation
 
@@ -164,7 +154,7 @@ var neo4jd3 = new Neo4jd3('.selector', options);
 
 ### Example
 
-Live example @ [https://eisman.github.io/neo4jd3/](https://eisman.github.io/neo4jd3/)
+Live example of original Eisman implementation @ [https://eisman.github.io/neo4jd3/](https://eisman.github.io/neo4jd3/)
 
 ```javascript
 var neo4jd3 = new Neo4jd3('#neo4jd3', {
@@ -241,9 +231,7 @@ var neo4jd3 = new Neo4jd3('#neo4jd3', {
 
 ## What's coming?
 
-* Toolbar.
 * More than one relationship between two nodes.
-* Markers.
 * Performance optimization.
 * Testing.
 

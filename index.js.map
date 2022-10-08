@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","names":["neo4jd3","require","module","exports"],"sources":["src/index.js"],"sourcesContent":["\"use strict\";\n\nvar neo4jd3 = require(\"./scripts/neo4jd3\");\n\nmodule.exports = neo4jd3;\n"],"mappings":"AAAA;;AAEA,IAAIA,OAAO,GAAGC,OAAO,CAAC,mBAAD,CAArB;;AAEAC,MAAM,CAACC,OAAP,GAAiBH,OAAjB"}
