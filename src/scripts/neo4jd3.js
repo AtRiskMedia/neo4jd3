@@ -2,7 +2,9 @@
 /* jshint latedef:nofunc */
 'use strict';
 
-function Neo4jD3(_selector, _options) {
+import * as d3 from "d3"
+ 
+export default function Neo4jD3(_selector, _options) {
   var container, graph, info, node, nodes, relationship, relationshipOutline, relationshipOverlay, relationshipText, relationships, selector, simulation, svg, svgNodes, svgRelationships, svgScale, svgTranslate,
     classes2colors = {},
     justLoaded = false,
@@ -32,8 +34,8 @@ function Neo4jD3(_selector, _options) {
              .attr('height', '100%')
              .attr('class', 'neo4jd3-graph')
              .call(d3.zoom().on('zoom', function() {
-               var scale = d3.event.transform.k,
-                 translate = [d3.event.transform.x, d3.event.transform.y];
+               var scale = 1; //d3.event.transform.k,
+                 //translate = [d3.event.transform.x, d3.event.transform.y];
 
                if (svgTranslate) {
                  translate[0] += svgTranslate[0];
@@ -151,8 +153,6 @@ function Neo4jD3(_selector, _options) {
              }
            })
            .on('dblclick', function(d) {
-             stickNode(d);
-
              if (typeof options.onNodeDoubleClick === 'function') {
                options.onNodeDoubleClick(d);
              }
@@ -370,31 +370,16 @@ function Neo4jD3(_selector, _options) {
     return d3.rgb(options.colors[options.colors.length - 1]).darker(1);
   }
 
-  function dragEnded(d) {
-    if (!d3.event.active) {
-      simulation.alphaTarget(0);
-    }
-
-    if (typeof options.onNodeDragEnd === 'function') {
-      options.onNodeDragEnd(d);
-    }
+  function dragEnded(event,d) {
+    d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y);
   }
 
-  function dragged(d) {
-    stickNode(d);
+  function dragged(event,d) {
+    d3.select(this).raise().attr("stroke", "black");
   }
 
-  function dragStarted(d) {
-    if (!d3.event.active) {
-      simulation.alphaTarget(0.3).restart();
-    }
-
-    d.fx = d.x;
-    d.fy = d.y;
-
-    if (typeof options.onNodeDragStart === 'function') {
-      options.onNodeDragStart(d);
-    }
+  function dragStarted(event,d) {
+    d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y); 
   }
 
   function extend(obj1, obj2) {
@@ -731,10 +716,6 @@ function Neo4jD3(_selector, _options) {
     }
   }
 */
-  function stickNode(d) {
-    d.fx = d3.event.x;
-    d.fy = d3.event.y;
-  }
 
   function tick() {
     tickNodes();
@@ -969,4 +950,3 @@ function Neo4jD3(_selector, _options) {
   };
 }
 
-module.exports = Neo4jD3;

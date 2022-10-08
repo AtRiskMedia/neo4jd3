@@ -1,5 +1,5 @@
 "use strict";
 
-var neo4jd3 = require("./scripts/neo4jd3");
+import Neo4jd3 from "./scripts/neo4jd3";
 
-module.exports = neo4jd3;
+export default Neo4jd3;
