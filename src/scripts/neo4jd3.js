@@ -70,6 +70,12 @@ export default function Neo4jD3(selector, _options) {
   function color() {
     return options.colors[(options.colors.length * Math.random()) << 0];
   }
+  function defaultColor() {
+    return options.colors[4];
+  }
+  function defaultEdgeColor() {
+    return options.colors[12];
+  }
 
   function contains(array, id) {
     var filter = array.filter(function (elem) {
@@ -174,47 +180,6 @@ export default function Neo4jD3(selector, _options) {
       .on("end", dragended);
   }
 
-  function randomD3Data(d, maxNodesToGenerate) {
-    var data = {
-        nodes: [],
-        relationships: [],
-      },
-      i,
-      label,
-      node,
-      numNodes = ((maxNodesToGenerate * Math.random()) << 0) + 1,
-      relationship,
-      s = size();
-    for (i = 0; i < numNodes; i++) {
-      label = "Testing";
-
-      node = {
-        id: s.nodes + 1 + i,
-        labels: [label],
-        properties: {
-          random: label,
-        },
-        x: d.x,
-        y: d.y,
-      };
-      data.nodes[data.nodes.length] = node;
-      relationship = {
-        id: s.relationships + 1 + i,
-        type: label.toUpperCase(),
-        startNode: d.id,
-        endNode: s.nodes + 1 + i,
-        properties: {
-          from: Date.now(),
-        },
-        source: d.id,
-        target: s.nodes + 1 + i,
-        linknum: s.relationships + 1 + i,
-      };
-      data.relationships[data.relationships.length] = relationship;
-    }
-    return data;
-  }
-
   function init(selector, _options) {
     merge(options, _options);
     if (options.hasOwnProperty("neo4jData")) {
@@ -244,12 +209,12 @@ export default function Neo4jD3(selector, _options) {
         .attr("markerHeight", 6)
         .attr("orient", "auto")
         .append("path")
-        .attr("fill", color)
+        .attr("fill", defaultEdgeColor())
         .attr("d", "M0,-5L10,0L0,5");
 
       const simulation = d3
         .forceSimulation(nodes)
-        .force("charge", d3.forceManyBody().strength(-400))
+        .force("charge", d3.forceManyBody().strength(-200))
         .force(
           "link",
           d3.forceLink(links).id(function (d) {
@@ -271,7 +236,7 @@ export default function Neo4jD3(selector, _options) {
         .selectAll("path")
         .data(links)
         .join("path")
-        .attr("stroke", (d) => color(d.type))
+        .attr("stroke", (d) => defaultEdgeColor())
         .attr(
           "marker-end",
           (d) => `url(${new URL(`#arrow-${d.type}`, location)})`
@@ -282,6 +247,7 @@ export default function Neo4jD3(selector, _options) {
         .attr("fill", "currentColor")
         .attr("stroke-linecap", "round")
         .attr("stroke-linejoin", "round")
+        .attr("cursor", "pointer")
         .selectAll("g")
         .data(nodes)
         .join("g")
@@ -295,7 +261,7 @@ export default function Neo4jD3(selector, _options) {
         .append("text")
         .attr("x", 8)
         .attr("y", "0.31em")
-        .text((d) => d.id)
+        .text((d) => d.labels.hasOwnProperty("0") && d.labels[0])
         .clone(true)
         .lower()
         .attr("fill", "none")
@@ -311,7 +277,6 @@ export default function Neo4jD3(selector, _options) {
 
   return {
     neo4jDataToD3Data: neo4jDataToD3Data,
-    randomD3Data: randomD3Data,
     size: size,
     version: version,
   };

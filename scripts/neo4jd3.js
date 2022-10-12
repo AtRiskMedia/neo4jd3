@@ -69,6 +69,14 @@ export default function Neo4jD3(selector, _options) {
     return options.colors[options.colors.length * Math.random() << 0];
   }
 
+  function defaultColor() {
+    return options.colors[4];
+  }
+
+  function defaultEdgeColor() {
+    return options.colors[12];
+  }
+
   function contains(array, id) {
     var filter = array.filter(function (elem) {
       return elem.id === id;
@@ -163,48 +171,6 @@ export default function Neo4jD3(selector, _options) {
     return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
   }
 
-  function randomD3Data(d, maxNodesToGenerate) {
-    var data = {
-      nodes: [],
-      relationships: []
-    },
-        i,
-        label,
-        node,
-        numNodes = (maxNodesToGenerate * Math.random() << 0) + 1,
-        relationship,
-        s = size();
-
-    for (i = 0; i < numNodes; i++) {
-      label = "Testing";
-      node = {
-        id: s.nodes + 1 + i,
-        labels: [label],
-        properties: {
-          random: label
-        },
-        x: d.x,
-        y: d.y
-      };
-      data.nodes[data.nodes.length] = node;
-      relationship = {
-        id: s.relationships + 1 + i,
-        type: label.toUpperCase(),
-        startNode: d.id,
-        endNode: s.nodes + 1 + i,
-        properties: {
-          from: Date.now()
-        },
-        source: d.id,
-        target: s.nodes + 1 + i,
-        linknum: s.relationships + 1 + i
-      };
-      data.relationships[data.relationships.length] = relationship;
-    }
-
-    return data;
-  }
-
   function init(selector, _options) {
     merge(options, _options);
 
@@ -218,14 +184,14 @@ export default function Neo4jD3(selector, _options) {
       const types = _types(links);
 
       const svg = container.append("svg").attr("width", "100%").attr("height", "100%").attr("class", "neo4jd3-graph");
-      svg.append("defs").selectAll("marker").data(types).join("marker").attr("id", d => `arrow-${d}`).attr("viewBox", "0 -5 10 10").attr("refX", 15).attr("refY", -0.5).attr("markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto").append("path").attr("fill", color).attr("d", "M0,-5L10,0L0,5");
-      const simulation = d3.forceSimulation(nodes).force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink(links).id(function (d) {
+      svg.append("defs").selectAll("marker").data(types).join("marker").attr("id", d => `arrow-${d}`).attr("viewBox", "0 -5 10 10").attr("refX", 15).attr("refY", -0.5).attr("markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto").append("path").attr("fill", defaultEdgeColor()).attr("d", "M0,-5L10,0L0,5");
+      const simulation = d3.forceSimulation(nodes).force("charge", d3.forceManyBody().strength(-200)).force("link", d3.forceLink(links).id(function (d) {
         return d.id;
       })).force("center", d3.forceCenter(svg.node().parentElement.parentElement.clientWidth / 2, svg.node().parentElement.parentElement.clientHeight / 2));
-      const link = svg.append("g").attr("fill", "none").attr("stroke-width", 1.5).selectAll("path").data(links).join("path").attr("stroke", d => color(d.type)).attr("marker-end", d => `url(${new URL(`#arrow-${d.type}`, location)})`);
-      const node = svg.append("g").attr("fill", "currentColor").attr("stroke-linecap", "round").attr("stroke-linejoin", "round").selectAll("g").data(nodes).join("g").call(drag(simulation));
+      const link = svg.append("g").attr("fill", "none").attr("stroke-width", 1.5).selectAll("path").data(links).join("path").attr("stroke", d => defaultEdgeColor()).attr("marker-end", d => `url(${new URL(`#arrow-${d.type}`, location)})`);
+      const node = svg.append("g").attr("fill", "currentColor").attr("stroke-linecap", "round").attr("stroke-linejoin", "round").attr("cursor", "pointer").selectAll("g").data(nodes).join("g").call(drag(simulation));
       node.append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("r", 4);
-      node.append("text").attr("x", 8).attr("y", "0.31em").text(d => d.id).clone(true).lower().attr("fill", "none").attr("stroke", "white").attr("stroke-width", 3);
+      node.append("text").attr("x", 8).attr("y", "0.31em").text(d => d.labels.hasOwnProperty("0") && d.labels[0]).clone(true).lower().attr("fill", "none").attr("stroke", "white").attr("stroke-width", 3);
       simulation.on("tick", function () {
         link.attr("d", linkArc);
         node.attr("transform", d => `translate(${d.x},${d.y})`);
@@ -235,7 +201,6 @@ export default function Neo4jD3(selector, _options) {
 
   return {
     neo4jDataToD3Data: neo4jDataToD3Data,
-    randomD3Data: randomD3Data,
     size: size,
     version: version
   };
