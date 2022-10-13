@@ -7,24 +7,13 @@ import * as d3 from "d3";
 export default function Neo4jD3(selector, _options) {
   var container,
     graph,
-    info,
     node,
     nodes,
     relationship,
-    relationshipOutline,
-    relationshipOverlay,
-    relationshipText,
     relationships,
     selector,
     simulation,
     svg,
-    svgNodes,
-    svgRelationships,
-    svgScale,
-    svgTranslate,
-    classes2colors = {},
-    justLoaded = false,
-    numClasses = 0,
     options = {
       arrowSize: 6,
       colors: colors(),
@@ -37,12 +26,6 @@ export default function Neo4jD3(selector, _options) {
 
   function version() {
     return VERSION;
-  }
-
-  function merge(target, source) {
-    Object.keys(source).forEach(function (property) {
-      target[property] = source[property];
-    });
   }
 
   function colors() {
@@ -75,6 +58,12 @@ export default function Neo4jD3(selector, _options) {
   }
   function defaultEdgeColor() {
     return options.colors[12];
+  }
+
+  function merge(target, source) {
+    Object.keys(source).forEach(function (property) {
+      target[property] = source[property];
+    });
   }
 
   function contains(array, id) {
@@ -186,11 +175,9 @@ export default function Neo4jD3(selector, _options) {
       const data = neo4jDataToD3Data(options.neo4jData);
       const container = d3.select(selector);
       container.attr("class", "neo4jd3").html("");
-
       const links = data.relationships;
       const nodes = data.nodes;
       const types = _types(links);
-
       const svg = container
         .append("svg")
         .attr("width", "100%")
@@ -214,7 +201,7 @@ export default function Neo4jD3(selector, _options) {
 
       const simulation = d3
         .forceSimulation(nodes)
-        .force("charge", d3.forceManyBody().strength(-200))
+        .force("charge", d3.forceManyBody().strength(-50))
         .force(
           "link",
           d3.forceLink(links).id(function (d) {
@@ -241,7 +228,6 @@ export default function Neo4jD3(selector, _options) {
           "marker-end",
           (d) => `url(${new URL(`#arrow-${d.type}`, location)})`
         );
-
       const node = svg
         .append("g")
         .attr("fill", "currentColor")
@@ -260,7 +246,7 @@ export default function Neo4jD3(selector, _options) {
       node
         .append("text")
         .attr("x", 8)
-        .attr("y", "0.31em")
+        .attr("y", "0.21em")
         .text((d) => d.labels.hasOwnProperty("0") && d.labels[0])
         .clone(true)
         .lower()
