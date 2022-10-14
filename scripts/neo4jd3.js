@@ -139,7 +139,7 @@ export default function Neo4jD3(selector, _options) {
   }
 
   function linkArc(d) {
-    const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
+    const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y) / d.linknum;
     return `
     M${d.source.x},${d.source.y}
     A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
@@ -167,15 +167,28 @@ export default function Neo4jD3(selector, _options) {
     return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
   }
 
+  function _links(links) {
+    for (var i = 0; i < links.length; i++) {
+      if (i != 0 && links[i].source == links[i - 1].source && links[i].target == links[i - 1].target) {
+        links[i].linknum = links[i - 1].linknum + 1;
+      } else {
+        links[i].linknum = 1;
+      }
+    }
+
+    return links;
+  }
+
   function init(selector, _options) {
     merge(options, _options);
-    console.log(options);
 
     if (options.hasOwnProperty("neo4jData")) {
       const data = neo4jDataToD3Data(options.neo4jData);
       const container = d3.select(selector);
       container.attr("class", "neo4jd3").html("");
-      const links = data.relationships;
+
+      const links = _links(data.relationships);
+
       const nodes = data.nodes;
 
       const types = _types(links);
