@@ -137,8 +137,8 @@ export default function Neo4jD3(selector, _options) {
     return graph;
   }
 
-  function _types(links) {
-    return Array.from(new Set(links.map((d) => d.type)));
+  function _types(relationships) {
+    return Array.from(new Set(relationships.map((d) => d.type)));
   }
 
   function linkArc(d) {
@@ -172,19 +172,19 @@ export default function Neo4jD3(selector, _options) {
       .on("end", dragended);
   }
 
-  function _links(links) {
-    for (var i = 0; i < links.length; i++) {
+  function _relationships(relationships) {
+    for (var i = 0; i < relationships.length; i++) {
       if (
         i != 0 &&
-        links[i].source == links[i - 1].source &&
-        links[i].target == links[i - 1].target
+        relationships[i].source == relationships[i - 1].source &&
+        relationships[i].target == relationships[i - 1].target
       ) {
-        links[i].linknum = links[i - 1].linknum + 1;
+        relationships[i].linknum = relationships[i - 1].linknum + 1;
       } else {
-        links[i].linknum = 1;
+        relationships[i].linknum = 1;
       }
     }
-    return links;
+    return relationships;
   }
 
   function init(selector, _options) {
@@ -193,22 +193,20 @@ export default function Neo4jD3(selector, _options) {
       const data = neo4jDataToD3Data(options.neo4jData);
       const container = d3.select(selector);
       container.attr("class", "neo4jd3").html("");
-      const links = _links(data.relationships);
-
+      const relationships = _relationships(data.relationships);
       const nodes = data.nodes;
-      const types = _types(links);
+      const types = _types(relationships);
       const svg = container
         .append("svg")
         .attr("width", "100%")
         .attr("height", "100%")
         .attr("class", "neo4jd3-graph");
-
       const simulation = d3
         .forceSimulation(nodes)
         .force("charge", d3.forceManyBody().strength(-50))
         .force(
           "link",
-          d3.forceLink(links).id(function (d) {
+          d3.forceLink(relationships).id(function (d) {
             return d.id;
           })
         )
@@ -219,13 +217,12 @@ export default function Neo4jD3(selector, _options) {
             svg.node().parentElement.parentElement.clientHeight / 2
           )
         );
-
-      const link = svg
+      const relationship = svg
         .append("g")
         .attr("fill", "none")
-        .attr("stroke-width", 1.5)
+        .attr("stroke-width", 2.5)
         .selectAll("path")
-        .data(links)
+        .data(relationships)
         .join("path")
         .attr("stroke", (d) => edgeColor(d));
       const node = svg
@@ -243,7 +240,8 @@ export default function Neo4jD3(selector, _options) {
         .attr("stroke", "white")
         .attr("stroke-width", 1.5)
         .attr("fill", (d) => nodeColor(d))
-        .attr("r", 4);
+        .attr("r", 7);
+      /*
       node
         .append("text")
         .attr("x", 8)
@@ -255,9 +253,10 @@ export default function Neo4jD3(selector, _options) {
         .attr("fill", "none")
         .attr("stroke", "white")
         .attr("stroke-width", 3);
+        */
 
       simulation.on("tick", function () {
-        link.attr("d", linkArc);
+        relationship.attr("d", linkArc);
         node.attr("transform", (d) => `translate(${d.x},${d.y})`);
       });
     }
