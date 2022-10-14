@@ -15,8 +15,7 @@ export default function Neo4jD3(selector, _options) {
     simulation,
     svg,
     options = {
-      arrowSize: 6,
-      colors: colors(),
+      colors: d3.schemeTableau10,
       neo4jData: undefined,
       neo4jDataUrl: undefined,
     },
@@ -57,7 +56,13 @@ export default function Neo4jD3(selector, _options) {
     return options.colors[4];
   }
   function defaultEdgeColor() {
-    return options.colors[12];
+    return options.colors[0];
+  }
+  function edgeColor(d) {
+    return options.colors[options?.legend[d.type]];
+  }
+  function nodeColor(n) {
+    return options.colors[options?.legend[n.labels[0]]];
   }
 
   function merge(target, source) {
@@ -150,18 +155,15 @@ export default function Neo4jD3(selector, _options) {
       d.fx = d.x;
       d.fy = d.y;
     }
-
     function dragged(event, d) {
       d.fx = event.x;
       d.fy = event.y;
     }
-
     function dragended(event, d) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
     }
-
     return d3
       .drag()
       .on("start", dragstarted)
@@ -171,6 +173,7 @@ export default function Neo4jD3(selector, _options) {
 
   function init(selector, _options) {
     merge(options, _options);
+    console.log(options);
     if (options.hasOwnProperty("neo4jData")) {
       const data = neo4jDataToD3Data(options.neo4jData);
       const container = d3.select(selector);
@@ -183,21 +186,6 @@ export default function Neo4jD3(selector, _options) {
         .attr("width", "100%")
         .attr("height", "100%")
         .attr("class", "neo4jd3-graph");
-      svg
-        .append("defs")
-        .selectAll("marker")
-        .data(types)
-        .join("marker")
-        .attr("id", (d) => `arrow-${d}`)
-        .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 15)
-        .attr("refY", -0.5)
-        .attr("markerWidth", 6)
-        .attr("markerHeight", 6)
-        .attr("orient", "auto")
-        .append("path")
-        .attr("fill", defaultEdgeColor())
-        .attr("d", "M0,-5L10,0L0,5");
 
       const simulation = d3
         .forceSimulation(nodes)
@@ -223,11 +211,7 @@ export default function Neo4jD3(selector, _options) {
         .selectAll("path")
         .data(links)
         .join("path")
-        .attr("stroke", (d) => defaultEdgeColor())
-        .attr(
-          "marker-end",
-          (d) => `url(${new URL(`#arrow-${d.type}`, location)})`
-        );
+        .attr("stroke", (d) => edgeColor(d));
       const node = svg
         .append("g")
         .attr("fill", "currentColor")
@@ -242,12 +226,14 @@ export default function Neo4jD3(selector, _options) {
         .append("circle")
         .attr("stroke", "white")
         .attr("stroke-width", 1.5)
+        .attr("fill", (d) => nodeColor(d))
         .attr("r", 4);
       node
         .append("text")
         .attr("x", 8)
-        .attr("y", "0.21em")
+        .attr("y", "0.3em")
         .text((d) => d.labels.hasOwnProperty("0") && d.labels[0])
+        .attr("font-size", "smaller")
         .clone(true)
         .lower()
         .attr("fill", "none")
