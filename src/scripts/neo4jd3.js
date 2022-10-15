@@ -21,7 +21,6 @@ export default function Neo4jD3(selector, _options) {
       neo4jDataUrl: undefined,
       distance: 100,
       labelFontSize: "12px",
-      infoPanel: true,
     },
     VERSION = "0.1.0";
 
@@ -68,14 +67,25 @@ export default function Neo4jD3(selector, _options) {
   function nodeColor(n) {
     return options.colors[options?.legend[n.labels[0]]];
   }
-  function defaultDarkenColor() {
-    return d3.rgb(options.colors[options.colors.length - 1]).darker(1);
-  }
 
   function merge(target, source) {
     Object.keys(source).forEach(function (property) {
       target[property] = source[property];
     });
+  }
+
+  function toString(d) {
+    var s = d.labels ? d.labels[0] : d.type;
+
+    s += " (<id>: " + d.id;
+
+    Object.keys(d.properties).forEach(function (property) {
+      s += ", " + property + ": " + JSON.stringify(d.properties[property]);
+    });
+
+    s += ")";
+
+    return s;
   }
 
   function contains(array, id) {
@@ -140,83 +150,6 @@ export default function Neo4jD3(selector, _options) {
       nodes: nodes.length,
       relationships: relationships.length,
     };
-  }
-
-  function appendInfoPanel(container) {
-    return container.append("div").attr("class", "neo4jd3-info");
-  }
-
-  function appendInfoElement(cls, isNode, property, value) {
-    var elem = info.append("a");
-
-    elem
-      .attr("href", "#")
-      .attr("class", cls)
-      .html("<strong>" + property + "</strong>" + (value ? ": " + value : ""));
-
-    if (!value) {
-      elem
-        .style("background-color", function (d) {
-          return options.nodeOutlineFillColor
-            ? options.nodeOutlineFillColor
-            : isNode
-            ? class2color(property)
-            : defaultColor();
-        })
-        .style("border-color", function (d) {
-          return options.nodeOutlineFillColor
-            ? class2darkenColor(options.nodeOutlineFillColor)
-            : isNode
-            ? class2darkenColor(property)
-            : defaultDarkenColor();
-        })
-        .style("color", function (d) {
-          return options.nodeOutlineFillColor
-            ? class2darkenColor(options.nodeOutlineFillColor)
-            : "#fff";
-        });
-    }
-  }
-
-  function class2darkenColor(cls) {
-    return d3.rgb(class2color(cls)).darker(1);
-  }
-
-  function appendInfoElementClass(cls, node) {
-    appendInfoElement(cls, true, node);
-  }
-
-  function appendInfoElementProperty(cls, property, value) {
-    appendInfoElement(cls, false, property, value);
-  }
-
-  function appendInfoElementRelationship(cls, relationship) {
-    appendInfoElement(cls, false, relationship);
-  }
-
-  function updateInfo(d) {
-    clearInfo();
-
-    if (d.labels) {
-      appendInfoElementClass("class", d.labels[0]);
-    } else {
-      appendInfoElementRelationship("class", d.type);
-    }
-
-    appendInfoElementProperty("property", "&lt;id&gt;", d.id);
-
-    if (d.properties)
-      Object.keys(d.properties).forEach(function (property) {
-        appendInfoElementProperty(
-          "property",
-          property,
-          JSON.stringify(d.properties[property])
-        );
-      });
-  }
-
-  function clearInfo() {
-    info.html("");
   }
 
   function neo4jDataToD3Data(data) {
@@ -345,6 +278,7 @@ export default function Neo4jD3(selector, _options) {
       const node = svg
         .append("g")
         .attr("fill", "currentColor")
+        .attr("class", "node")
         .attr("stroke-linecap", "round")
         .attr("stroke-linejoin", "round")
         .attr("cursor", "pointer")
@@ -359,22 +293,11 @@ export default function Neo4jD3(selector, _options) {
         .attr("stroke", "white")
         .attr("stroke-width", 1.5)
         .attr("fill", (d) => nodeColor(d))
-        .attr("r", 7);
-      /*
-        .on("mouseenter", function (d) {
-          if (info) {
-            updateInfo(d);
-          }
-          //if (typeof options.onNodeMouseEnter === "function") {
-          //  options.onNodeMouseEnter(d);
-          //}
-        })
-        .on("mouseleave", function (d) {
-          if (info) {
-            clearInfo(d);
-          }
+        .attr("r", 7)
+        .append("title")
+        .text(function (d) {
+          return toString(d);
         });
-        */
       simulation.on("tick", function () {
         relationshipArc.attr("d", linkArc);
         node.attr("transform", (d) => `translate(${d.x},${d.y})`);
