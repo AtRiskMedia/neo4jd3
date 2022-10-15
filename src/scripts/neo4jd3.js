@@ -206,9 +206,14 @@ export default function Neo4jD3(selector, _options) {
         .force("charge", d3.forceManyBody().strength(-50))
         .force(
           "link",
-          d3.forceLink(relationships).id(function (d) {
-            return d.id;
-          })
+          d3
+            .forceLink(relationships)
+            .id(function (d) {
+              return d.id;
+            })
+            .distance(function (d) {
+              return options?.distance || 60;
+            })
         )
         .force(
           "center",
@@ -217,14 +222,39 @@ export default function Neo4jD3(selector, _options) {
             svg.node().parentElement.parentElement.clientHeight / 2
           )
         );
-      const relationship = svg
+      const svgRelationships = svg
         .append("g")
+        .attr("class", "relationships")
         .attr("fill", "none")
         .attr("stroke-width", 2.5)
-        .selectAll("path")
-        .data(relationships)
+        .selectAll("g")
+        .data(relationships, function (d) {
+          return d.id;
+        })
+        .join("g")
+        .attr("class", "relationship");
+      const relationshipArc = svg
+        .selectAll(".relationship")
+        .append("path")
+        .attr("id", function (d, i) {
+          return "edgepath" + i;
+        })
         .join("path")
         .attr("stroke", (d) => edgeColor(d));
+      const relationshipLabel = svg
+        .selectAll(".relationship")
+        .append("text")
+        .attr("class", "text")
+        .attr("fill", "#000")
+        .attr("font-size", "10px")
+        .attr("class", "text")
+        .append("textPath")
+        .attr("xlink:xlink:href", function (d, i) {
+          return "#edgepath" + i;
+        })
+        .text(function (d) {
+          return `___${d.type}`;
+        });
       const node = svg
         .append("g")
         .attr("fill", "currentColor")
@@ -232,7 +262,9 @@ export default function Neo4jD3(selector, _options) {
         .attr("stroke-linejoin", "round")
         .attr("cursor", "pointer")
         .selectAll("g")
-        .data(nodes)
+        .data(nodes, function (d) {
+          return d.id;
+        })
         .join("g")
         .call(drag(simulation));
       node
@@ -241,22 +273,9 @@ export default function Neo4jD3(selector, _options) {
         .attr("stroke-width", 1.5)
         .attr("fill", (d) => nodeColor(d))
         .attr("r", 7);
-      /*
-      node
-        .append("text")
-        .attr("x", 8)
-        .attr("y", "0.3em")
-        .text((d) => d.labels.hasOwnProperty("0") && d.labels[0])
-        .attr("font-size", "smaller")
-        .clone(true)
-        .lower()
-        .attr("fill", "none")
-        .attr("stroke", "white")
-        .attr("stroke-width", 3);
-        */
 
       simulation.on("tick", function () {
-        relationship.attr("d", linkArc);
+        relationshipArc.attr("d", linkArc);
         node.attr("transform", (d) => `translate(${d.x},${d.y})`);
       });
     }
