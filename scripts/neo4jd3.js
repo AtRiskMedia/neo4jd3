@@ -19,7 +19,8 @@ export default function Neo4jD3(selector, _options) {
     colors: d3.schemeTableau10,
     neo4jData: undefined,
     neo4jDataUrl: undefined,
-    distance: 80,
+    distance: 100,
+    labelFontSize: "12px",
     infoPanel: true
   },
       VERSION = "0.1.0";
@@ -270,7 +271,7 @@ export default function Neo4jD3(selector, _options) {
       const relationshipArc = svg.selectAll(".relationship").append("path").attr("id", function (d, i) {
         return "edgepath" + i;
       }).join("path").attr("stroke", d => edgeColor(d));
-      const relationshipLabel = svg.selectAll(".relationship").append("text").attr("class", "text").attr("fill", "#000").attr("font-size", "10px").attr("class", "text").append("textPath").attr("xlink:xlink:href", function (d, i) {
+      const relationshipLabel = svg.selectAll(".relationship").append("text").attr("class", "text").attr("fill", "#000").attr("font-size", options.labelFontSize).attr("class", "text").append("textPath").attr("xlink:xlink:href", function (d, i) {
         return "#edgepath" + i;
       }).text(function (d) {
         return `___${d.type}`;
@@ -278,18 +279,23 @@ export default function Neo4jD3(selector, _options) {
       const node = svg.append("g").attr("fill", "currentColor").attr("stroke-linecap", "round").attr("stroke-linejoin", "round").attr("cursor", "pointer").selectAll("g").data(nodes, function (d) {
         return d.id;
       }).join("g").call(drag(simulation));
-      node.enter().append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("fill", d => nodeColor(d)).attr("r", 7).on("mouseenter", function (d) {
-        if (info) {
-          updateInfo(d);
-        } //if (typeof options.onNodeMouseEnter === "function") {
-        //  options.onNodeMouseEnter(d);
-        //}
+      node.append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("fill", d => nodeColor(d)).attr("r", 7);
+      /*
+        .on("mouseenter", function (d) {
+          if (info) {
+            updateInfo(d);
+          }
+          //if (typeof options.onNodeMouseEnter === "function") {
+          //  options.onNodeMouseEnter(d);
+          //}
+        })
+        .on("mouseleave", function (d) {
+          if (info) {
+            clearInfo(d);
+          }
+        });
+        */
 
-      }).on("mouseleave", function (d) {
-        if (info) {
-          clearInfo(d);
-        }
-      });
       simulation.on("tick", function () {
         relationshipArc.attr("d", linkArc);
         node.attr("transform", d => `translate(${d.x},${d.y})`);

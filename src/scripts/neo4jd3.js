@@ -19,7 +19,8 @@ export default function Neo4jD3(selector, _options) {
       colors: d3.schemeTableau10,
       neo4jData: undefined,
       neo4jDataUrl: undefined,
-      distance: 80,
+      distance: 100,
+      labelFontSize: "12px",
       infoPanel: true,
     },
     VERSION = "0.1.0";
@@ -332,7 +333,7 @@ export default function Neo4jD3(selector, _options) {
         .append("text")
         .attr("class", "text")
         .attr("fill", "#000")
-        .attr("font-size", "10px")
+        .attr("font-size", options.labelFontSize)
         .attr("class", "text")
         .append("textPath")
         .attr("xlink:xlink:href", function (d, i) {
