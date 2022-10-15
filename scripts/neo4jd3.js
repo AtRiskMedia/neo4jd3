@@ -7,6 +7,7 @@ import * as d3 from "d3";
 export default function Neo4jD3(selector, _options) {
   var container,
       graph,
+      info,
       node,
       nodes,
       relationship,
@@ -17,7 +18,9 @@ export default function Neo4jD3(selector, _options) {
       options = {
     colors: d3.schemeTableau10,
     neo4jData: undefined,
-    neo4jDataUrl: undefined
+    neo4jDataUrl: undefined,
+    distance: 80,
+    infoPanel: true
   },
       VERSION = "0.1.0";
   init(selector, _options);
@@ -67,6 +70,10 @@ export default function Neo4jD3(selector, _options) {
     return options.colors[options?.legend[n.labels[0]]];
   }
 
+  function defaultDarkenColor() {
+    return d3.rgb(options.colors[options.colors.length - 1]).darker(1);
+  }
+
   function merge(target, source) {
     Object.keys(source).forEach(function (property) {
       target[property] = source[property];
@@ -80,11 +87,110 @@ export default function Neo4jD3(selector, _options) {
     return filter.length > 0;
   }
 
+  function linkArc(d) {
+    const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y) / d.linknum;
+    return `
+    M${d.source.x},${d.source.y}
+    A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
+  `;
+  }
+
+  function drag(simulation) {
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+  }
+
+  function _types(relationships) {
+    return Array.from(new Set(relationships.map(d => d.type)));
+  }
+
+  function _relationships(relationships) {
+    for (var i = 0; i < relationships.length; i++) {
+      if (i != 0 && relationships[i].source == relationships[i - 1].source && relationships[i].target == relationships[i - 1].target) {
+        relationships[i].linknum = relationships[i - 1].linknum + 1;
+      } else {
+        relationships[i].linknum = 1;
+      }
+    }
+
+    return relationships;
+  }
+
   function size() {
     return {
       nodes: nodes.length,
       relationships: relationships.length
     };
+  }
+
+  function appendInfoPanel(container) {
+    return container.append("div").attr("class", "neo4jd3-info");
+  }
+
+  function appendInfoElement(cls, isNode, property, value) {
+    var elem = info.append("a");
+    elem.attr("href", "#").attr("class", cls).html("<strong>" + property + "</strong>" + (value ? ": " + value : ""));
+
+    if (!value) {
+      elem.style("background-color", function (d) {
+        return options.nodeOutlineFillColor ? options.nodeOutlineFillColor : isNode ? class2color(property) : defaultColor();
+      }).style("border-color", function (d) {
+        return options.nodeOutlineFillColor ? class2darkenColor(options.nodeOutlineFillColor) : isNode ? class2darkenColor(property) : defaultDarkenColor();
+      }).style("color", function (d) {
+        return options.nodeOutlineFillColor ? class2darkenColor(options.nodeOutlineFillColor) : "#fff";
+      });
+    }
+  }
+
+  function class2darkenColor(cls) {
+    return d3.rgb(class2color(cls)).darker(1);
+  }
+
+  function appendInfoElementClass(cls, node) {
+    appendInfoElement(cls, true, node);
+  }
+
+  function appendInfoElementProperty(cls, property, value) {
+    appendInfoElement(cls, false, property, value);
+  }
+
+  function appendInfoElementRelationship(cls, relationship) {
+    appendInfoElement(cls, false, relationship);
+  }
+
+  function updateInfo(d) {
+    clearInfo();
+
+    if (d.labels) {
+      appendInfoElementClass("class", d.labels[0]);
+    } else {
+      appendInfoElementRelationship("class", d.type);
+    }
+
+    appendInfoElementProperty("property", "&lt;id&gt;", d.id);
+    if (d.properties) Object.keys(d.properties).forEach(function (property) {
+      appendInfoElementProperty("property", property, JSON.stringify(d.properties[property]));
+    });
+  }
+
+  function clearInfo() {
+    info.html("");
   }
 
   function neo4jDataToD3Data(data) {
@@ -134,51 +240,6 @@ export default function Neo4jD3(selector, _options) {
     return graph;
   }
 
-  function _types(relationships) {
-    return Array.from(new Set(relationships.map(d => d.type)));
-  }
-
-  function linkArc(d) {
-    const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y) / d.linknum;
-    return `
-    M${d.source.x},${d.source.y}
-    A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
-  `;
-  }
-
-  function drag(simulation) {
-    function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-
-    function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
-
-    return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
-  }
-
-  function _relationships(relationships) {
-    for (var i = 0; i < relationships.length; i++) {
-      if (i != 0 && relationships[i].source == relationships[i - 1].source && relationships[i].target == relationships[i - 1].target) {
-        relationships[i].linknum = relationships[i - 1].linknum + 1;
-      } else {
-        relationships[i].linknum = 1;
-      }
-    }
-
-    return relationships;
-  }
-
   function init(selector, _options) {
     merge(options, _options);
 
@@ -186,6 +247,10 @@ export default function Neo4jD3(selector, _options) {
       const data = neo4jDataToD3Data(options.neo4jData);
       const container = d3.select(selector);
       container.attr("class", "neo4jd3").html("");
+
+      if (options.infoPanel) {
+        info = appendInfoPanel(container);
+      }
 
       const relationships = _relationships(data.relationships);
 
@@ -213,7 +278,18 @@ export default function Neo4jD3(selector, _options) {
       const node = svg.append("g").attr("fill", "currentColor").attr("stroke-linecap", "round").attr("stroke-linejoin", "round").attr("cursor", "pointer").selectAll("g").data(nodes, function (d) {
         return d.id;
       }).join("g").call(drag(simulation));
-      node.append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("fill", d => nodeColor(d)).attr("r", 7);
+      node.enter().append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("fill", d => nodeColor(d)).attr("r", 7).on("mouseenter", function (d) {
+        if (info) {
+          updateInfo(d);
+        } //if (typeof options.onNodeMouseEnter === "function") {
+        //  options.onNodeMouseEnter(d);
+        //}
+
+      }).on("mouseleave", function (d) {
+        if (info) {
+          clearInfo(d);
+        }
+      });
       simulation.on("tick", function () {
         relationshipArc.attr("d", linkArc);
         node.attr("transform", d => `translate(${d.x},${d.y})`);
