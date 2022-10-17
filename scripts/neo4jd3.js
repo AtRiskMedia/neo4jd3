@@ -8,6 +8,8 @@ export default function Neo4jD3(selector, _options) {
   var container,
       graph,
       info,
+      classes2colors = {},
+      numClasses = 0,
       node,
       nodes,
       relationship,
@@ -16,12 +18,13 @@ export default function Neo4jD3(selector, _options) {
       simulation,
       svg,
       options = {
-    colors: d3.schemeTableau10,
+    colors: colors(),
     neo4jData: undefined,
     neo4jDataUrl: undefined,
     distance: 100,
     strength: -300,
-    labelFontSize: "12px"
+    labelFontSize: "12px",
+    infoPanel: false
   },
       VERSION = "0.1.0";
   init(selector, _options);
@@ -59,16 +62,12 @@ export default function Neo4jD3(selector, _options) {
     return options.colors[4];
   }
 
+  function defaultDarkenColor() {
+    return d3.rgb(options.colors[options.colors.length - 1]).darker(1);
+  }
+
   function defaultEdgeColor() {
     return options.colors[0];
-  }
-
-  function edgeColor(d) {
-    return options.colors[options?.legend[d.type]];
-  }
-
-  function nodeColor(n) {
-    return options.colors[options?.legend[n.properties.type]];
   }
 
   function merge(target, source) {
@@ -121,6 +120,71 @@ export default function Neo4jD3(selector, _options) {
     }
 
     return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+  }
+
+  function appendInfoPanel(container) {
+    return container.append("div").attr("class", "neo4jd3-info");
+  }
+
+  function appendInfoElement(cls, isNode, property, value) {
+    var elem = info.append("div");
+    elem.attr("class", cls).html("<strong>" + property + "</strong>" + (value ? ": " + value : ""));
+
+    if (!value) {
+      elem.style("color", function (d) {
+        return property ? class2color(property) : defaultColor();
+      }).style("border-color", function (d) {
+        return property ? class2darkenColor(property) : defaultDarkenColor();
+      });
+    }
+  }
+
+  function appendInfoElementClass(cls, node) {
+    appendInfoElement(cls, true, node);
+  }
+
+  function appendInfoElementProperty(cls, property, value) {
+    appendInfoElement(cls, false, property, value);
+  }
+
+  function appendInfoElementRelationship(cls, relationship) {
+    appendInfoElement(cls, false, relationship);
+  }
+
+  function class2color(cls) {
+    var color = classes2colors[cls];
+
+    if (!color) {
+      //            color = options.colors[Math.min(numClasses, options.colors.length - 1)];
+      color = options.colors[numClasses % options.colors.length];
+      classes2colors[cls] = color;
+      numClasses++;
+    }
+
+    return color;
+  }
+
+  function class2darkenColor(cls) {
+    return d3.rgb(class2color(cls)).darker(1);
+  }
+
+  function clearInfo() {
+    info.html("");
+  }
+
+  function updateInfo(d) {
+    clearInfo();
+
+    if (d.labels) {
+      appendInfoElementClass("class", d.labels[0]);
+    } else {
+      appendInfoElementRelationship("class", d.type);
+    }
+
+    appendInfoElementProperty("property", "id", d.id);
+    Object.keys(d.properties).forEach(function (property) {
+      appendInfoElementProperty("property", property, JSON.stringify(d.properties[property]));
+    });
   }
 
   function _types(relationships) {
@@ -201,7 +265,7 @@ export default function Neo4jD3(selector, _options) {
       const container = d3.select(selector);
       container.attr("class", "neo4jd3").html("");
 
-      if (options.infoPanel) {
+      if (options?.infoPanel) {
         info = appendInfoPanel(container);
       }
 
@@ -217,26 +281,30 @@ export default function Neo4jD3(selector, _options) {
       }).distance(function (d) {
         return options.distance;
       })).force("center", d3.forceCenter(svg.node().parentElement.parentElement.clientWidth / 2, svg.node().parentElement.parentElement.clientHeight / 2));
-      const svgRelationships = svg.append("g").attr("class", "relationships").attr("fill", "none").attr("stroke-width", 2.5).selectAll("g").data(relationships, function (d) {
+      const svgRelationships = svg.append("g").attr("class", "relationships").attr("fill", "none").attr("stroke-width", 4).selectAll("g").data(relationships, function (d) {
         return d.id;
       }).join("g").attr("class", "relationship");
       const relationshipArc = svg.selectAll(".relationship").append("path").attr("id", function (d, i) {
         return "edgepath" + i;
-      }).join("path").attr("stroke", d => edgeColor(d));
+      }).join("path").attr("stroke", d => class2color(d.type));
       const relationshipLabel = svg.selectAll(".relationship").append("text").attr("class", "text").attr("fill", "#000").attr("font-size", options.labelFontSize).attr("class", "text").append("textPath").attr("xlink:xlink:href", function (d, i) {
         return "#edgepath" + i;
       }).text(function (d) {
         return `___${d.type}`;
       });
-      const node = svg.append("g").attr("fill", "currentColor").attr("class", "node").attr("stroke-linecap", "round").attr("stroke-linejoin", "round").attr("cursor", "pointer").selectAll("g").data(nodes, function (d) {
+      const allNodes = svg.append("g").attr("class", "nodes").attr("fill", "currentColor").attr("class", "node").attr("stroke-linecap", "round").attr("stroke-linejoin", "round").attr("cursor", "pointer").selectAll("g").data(nodes, function (d) {
         return d.id;
-      }).join("g").call(drag(simulation));
-      node.append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("fill", d => nodeColor(d)).attr("r", 17).append("title").text(function (d) {
+      }).join("g").attr("class", "node").on("mouseover", function (e, d) {
+        if (info) updateInfo(d);
+      }).on("mouseleave", function (e, d) {
+        if (info) clearInfo(d);
+      }).call(drag(simulation));
+      allNodes.append("circle").attr("stroke", "#000").attr("stroke-width", 4).attr("fill", d => class2color(d.labels[0])).attr("r", 17).append("title").text(function (d) {
         return toString(d);
       });
       simulation.on("tick", function () {
         relationshipArc.attr("d", linkArc);
-        node.attr("transform", d => `translate(${d.x},${d.y})`);
+        allNodes.attr("transform", d => `translate(${d.x},${d.y})`);
       });
     }
   }
