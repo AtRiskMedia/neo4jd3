@@ -299,7 +299,7 @@ export default function Neo4jD3(selector, _options) {
       }).on("mouseleave", function (e, d) {
         if (info) clearInfo(d);
       }).call(drag(simulation));
-      allNodes.append("circle").attr("stroke", "#000").attr("stroke-width", 4).attr("fill", d => class2color(d.labels[0])).attr("r", 17).append("title").text(function (d) {
+      allNodes.append("circle").attr("stroke", "#000").attr("stroke-width", 2).attr("fill", d => class2color(d.labels[0])).attr("r", 17).append("title").text(function (d) {
         return toString(d);
       });
       simulation.on("tick", function () {

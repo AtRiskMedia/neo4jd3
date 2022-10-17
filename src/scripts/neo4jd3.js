@@ -371,7 +371,7 @@ export default function Neo4jD3(selector, _options) {
       allNodes
         .append("circle")
         .attr("stroke", "#000")
-        .attr("stroke-width", 4)
+        .attr("stroke-width", 2)
         .attr("fill", (d) => class2color(d.labels[0]))
         .attr("r", 17)
         .append("title")
