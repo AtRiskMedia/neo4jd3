@@ -20,6 +20,7 @@ export default function Neo4jD3(selector, _options) {
     neo4jData: undefined,
     neo4jDataUrl: undefined,
     distance: 100,
+    strength: -300,
     labelFontSize: "12px"
   },
       VERSION = "0.1.0";
@@ -67,7 +68,7 @@ export default function Neo4jD3(selector, _options) {
   }
 
   function nodeColor(n) {
-    return options.colors[options?.legend[n.labels[0]]];
+    return options.colors[options?.legend[n.properties.type]];
   }
 
   function merge(target, source) {
@@ -211,10 +212,10 @@ export default function Neo4jD3(selector, _options) {
       const types = _types(relationships);
 
       const svg = container.append("svg").attr("width", "100%").attr("height", "100%").attr("class", "neo4jd3-graph");
-      const simulation = d3.forceSimulation(nodes).force("charge", d3.forceManyBody().strength(-50)).force("link", d3.forceLink(relationships).id(function (d) {
+      const simulation = d3.forceSimulation(nodes).force("charge", d3.forceManyBody().strength(options.strength)).force("link", d3.forceLink(relationships).id(function (d) {
         return d.id;
       }).distance(function (d) {
-        return options?.distance || 60;
+        return options.distance;
       })).force("center", d3.forceCenter(svg.node().parentElement.parentElement.clientWidth / 2, svg.node().parentElement.parentElement.clientHeight / 2));
       const svgRelationships = svg.append("g").attr("class", "relationships").attr("fill", "none").attr("stroke-width", 2.5).selectAll("g").data(relationships, function (d) {
         return d.id;
@@ -230,7 +231,7 @@ export default function Neo4jD3(selector, _options) {
       const node = svg.append("g").attr("fill", "currentColor").attr("class", "node").attr("stroke-linecap", "round").attr("stroke-linejoin", "round").attr("cursor", "pointer").selectAll("g").data(nodes, function (d) {
         return d.id;
       }).join("g").call(drag(simulation));
-      node.append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("fill", d => nodeColor(d)).attr("r", 7).append("title").text(function (d) {
+      node.append("circle").attr("stroke", "white").attr("stroke-width", 1.5).attr("fill", d => nodeColor(d)).attr("r", 17).append("title").text(function (d) {
         return toString(d);
       });
       simulation.on("tick", function () {

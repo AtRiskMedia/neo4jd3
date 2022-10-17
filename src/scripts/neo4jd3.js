@@ -20,6 +20,7 @@ export default function Neo4jD3(selector, _options) {
       neo4jData: undefined,
       neo4jDataUrl: undefined,
       distance: 100,
+      strength: -300,
       labelFontSize: "12px",
     },
     VERSION = "0.1.0";
@@ -65,7 +66,7 @@ export default function Neo4jD3(selector, _options) {
     return options.colors[options?.legend[d.type]];
   }
   function nodeColor(n) {
-    return options.colors[options?.legend[n.labels[0]]];
+    return options.colors[options?.legend[n.properties.type]];
   }
 
   function merge(target, source) {
@@ -223,7 +224,7 @@ export default function Neo4jD3(selector, _options) {
         .attr("class", "neo4jd3-graph");
       const simulation = d3
         .forceSimulation(nodes)
-        .force("charge", d3.forceManyBody().strength(-50))
+        .force("charge", d3.forceManyBody().strength(options.strength))
         .force(
           "link",
           d3
@@ -232,7 +233,7 @@ export default function Neo4jD3(selector, _options) {
               return d.id;
             })
             .distance(function (d) {
-              return options?.distance || 60;
+              return options.distance;
             })
         )
         .force(
@@ -293,7 +294,7 @@ export default function Neo4jD3(selector, _options) {
         .attr("stroke", "white")
         .attr("stroke-width", 1.5)
         .attr("fill", (d) => nodeColor(d))
-        .attr("r", 7)
+        .attr("r", 17)
         .append("title")
         .text(function (d) {
           return toString(d);
