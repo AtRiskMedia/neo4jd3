@@ -274,13 +274,16 @@ export default function Neo4jD3(selector, _options) {
     merge(options, _options);
     if (options.hasOwnProperty("neo4jData")) {
       const data = neo4jDataToD3Data(options.neo4jData);
+      console.log(1, data);
       const container = d3.select(selector);
       container.attr("class", "neo4jd3").html("");
       if (options?.infoPanel) {
         info = appendInfoPanel(container);
       }
       const relationships = _relationships(data.relationships);
+      console.log(2, relationships);
       const nodes = data.nodes;
+      console.log(3, nodes);
       const svg = container
         .append("svg")
         .attr("width", "100%")
