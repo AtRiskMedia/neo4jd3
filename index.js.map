@@ -1,1 +1,1 @@
-{"version":3,"file":"index.js","names":["Neo4jd3"],"sources":["src/index.js"],"sourcesContent":["\"use strict\";\n\nimport Neo4jd3 from \"./scripts/neo4jd3\";\n\nexport default Neo4jd3;\n"],"mappings":"AAAA;;AAEA,OAAOA,OAAP,MAAoB,mBAApB;AAEA,eAAeA,OAAf"}
+{"version":3,"file":"index.js","names":["Neo4jd3"],"sources":["src/index.js"],"sourcesContent":["\"use strict\";\n\nimport Neo4jd3 from \"./scripts/neo4jd3\";\n\nexport default Neo4jd3;\n"],"mappings":"AAAA,YAAY;;AAEZ,OAAOA,OAAO,MAAM,mBAAmB;AAEvC,eAAeA,OAAO"}

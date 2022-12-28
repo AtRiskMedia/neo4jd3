@@ -1,55 +1,67 @@
 /* global d3, document */
-
 /* jshint latedef:nofunc */
 "use strict";
 
 import * as d3 from "d3";
 export default function Neo4jD3(selector, _options) {
   var container,
-      graph,
-      info,
-      classes2colors = {},
-      numClasses = 0,
-      node,
-      nodes,
-      relationship,
-      relationships,
-      selector,
-      simulation,
-      svg,
-      options = {
-    colors: colors(),
-    neo4jData: undefined,
-    neo4jDataUrl: undefined,
-    distance: 100,
-    strength: -300,
-    labelFontSize: "12px",
-    infoPanel: false
-  },
-      VERSION = "0.1.0";
+    graph,
+    info,
+    classes2colors = {},
+    numClasses = 0,
+    node,
+    nodes,
+    relationship,
+    relationships,
+    selector,
+    simulation,
+    svg,
+    options = {
+      colors: colors(),
+      neo4jData: undefined,
+      neo4jDataUrl: undefined,
+      distance: 100,
+      strength: -300,
+      labelFontSize: "12px",
+      infoPanel: false
+    },
+    VERSION = "0.1.0";
   init(selector, _options);
-
   function version() {
     return VERSION;
   }
-
   function colors() {
     // oneDark inspired by distrotube (dt)
-    return ["#1c1f24", // black
-    "#ff6c6b", // red
-    "#98be65", // green
-    "#da8548", // yellow
-    "#51afef", // blue
-    "#c678dd", // magenta
-    "#5699af", // cyan
-    "#a7b1b7", // white
-    "#5b6268", // brighter black
-    "#da8548", // brighter red
-    "#4db5bd", // brighter green
-    "#ecbe7b", // brighter yellow
-    "#3071db", // brighter blue
-    "#a9a1e1", // brighter magenta
-    "#46d9ff", // brighter cyan
+    return ["#1c1f24",
+    // black
+    "#ff6c6b",
+    // red
+    "#98be65",
+    // green
+    "#da8548",
+    // yellow
+    "#51afef",
+    // blue
+    "#c678dd",
+    // magenta
+    "#5699af",
+    // cyan
+    "#a7b1b7",
+    // white
+    "#5b6268",
+    // brighter black
+    "#da8548",
+    // brighter red
+    "#4db5bd",
+    // brighter green
+    "#ecbe7b",
+    // brighter yellow
+    "#3071db",
+    // brighter blue
+    "#a9a1e1",
+    // brighter magenta
+    "#46d9ff",
+    // brighter cyan
     "#dfdfdf" // brighter white
     ];
   }
@@ -57,25 +69,20 @@ export default function Neo4jD3(selector, _options) {
   function color() {
     return options.colors[options.colors.length * Math.random() << 0];
   }
-
   function defaultColor() {
     return options.colors[4];
   }
-
   function defaultDarkenColor() {
     return d3.rgb(options.colors[options.colors.length - 1]).darker(1);
   }
-
   function defaultEdgeColor() {
     return options.colors[0];
   }
-
   function merge(target, source) {
     Object.keys(source).forEach(function (property) {
       target[property] = source[property];
     });
   }
-
   function toString(d) {
     var s = d.labels ? d.labels[0] : d.type;
     s += " (<id>: " + d.id;
@@ -85,14 +92,12 @@ export default function Neo4jD3(selector, _options) {
     s += ")";
     return s;
   }
-
   function contains(array, id) {
     var filter = array.filter(function (elem) {
       return elem.id === id;
     });
     return filter.length > 0;
   }
-
   function linkArc(d) {
     const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y) / d.linknum;
     return `
@@ -100,36 +105,29 @@ export default function Neo4jD3(selector, _options) {
     A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
   `;
   }
-
   function drag(simulation) {
     function dragstarted(event, d) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
-
     function dragged(event, d) {
       d.fx = event.x;
       d.fy = event.y;
     }
-
     function dragended(event, d) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
     }
-
     return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
   }
-
   function appendInfoPanel(container) {
     return container.append("div").attr("class", "neo4jd3-info");
   }
-
   function appendInfoElement(cls, isNode, property, value) {
     var elem = info.append("div");
     elem.attr("class", cls).html("<strong>" + property + "</strong>" + (value ? ": " + value : ""));
-
     if (!value) {
       elem.style("color", function (d) {
         return property ? class2color(property) : defaultColor();
@@ -138,59 +136,46 @@ export default function Neo4jD3(selector, _options) {
       });
     }
   }
-
   function appendInfoElementClass(cls, node) {
     appendInfoElement(cls, true, node);
   }
-
   function appendInfoElementProperty(cls, property, value) {
     appendInfoElement(cls, false, property, value);
   }
-
   function appendInfoElementRelationship(cls, relationship) {
     appendInfoElement(cls, false, relationship);
   }
-
   function class2color(cls) {
     var color = classes2colors[cls];
-
     if (!color) {
       //            color = options.colors[Math.min(numClasses, options.colors.length - 1)];
       color = options.colors[numClasses % options.colors.length];
       classes2colors[cls] = color;
       numClasses++;
     }
-
     return color;
   }
-
   function class2darkenColor(cls) {
     return d3.rgb(class2color(cls)).darker(1);
   }
-
   function clearInfo() {
     info.html("");
   }
-
   function updateInfo(d) {
     clearInfo();
-
     if (d.labels) {
       appendInfoElementClass("class", d.labels[0]);
     } else {
       appendInfoElementRelationship("class", d.type);
     }
-
     appendInfoElementProperty("property", "id", d.id);
     Object.keys(d.properties).forEach(function (property) {
       appendInfoElementProperty("property", property, JSON.stringify(d.properties[property]));
     });
   }
-
   function _types(relationships) {
     return Array.from(new Set(relationships.map(d => d.type)));
   }
-
   function _relationships(relationships) {
     for (var i = 0; i < relationships.length; i++) {
       if (i != 0 && relationships[i].source == relationships[i - 1].source && relationships[i].target == relationships[i - 1].target) {
@@ -199,23 +184,20 @@ export default function Neo4jD3(selector, _options) {
         relationships[i].linknum = 1;
       }
     }
-
     return relationships;
   }
-
   function size() {
     return {
       nodes: nodes.length,
       relationships: relationships.length
     };
   }
-
   function neo4jDataToD3Data(data) {
     var graph = {
       nodes: [],
       relationships: []
     };
-    data.results.forEach(function (result) {
+    data?.results?.forEach(function (result) {
       result.data.forEach(function (data) {
         data.graph.nodes.forEach(function (node) {
           if (!contains(graph.nodes, node.id)) {
@@ -236,7 +218,6 @@ export default function Neo4jD3(selector, _options) {
             if (a.target > b.target) {
               return 1;
             }
-
             if (a.target < b.target) {
               return -1;
             } else {
@@ -244,7 +225,6 @@ export default function Neo4jD3(selector, _options) {
             }
           }
         });
-
         for (var i = 0; i < data.graph.relationships.length; i++) {
           if (i !== 0 && data.graph.relationships[i].source === data.graph.relationships[i - 1].source && data.graph.relationships[i].target === data.graph.relationships[i - 1].target) {
             data.graph.relationships[i].linknum = data.graph.relationships[i - 1].linknum + 1;
@@ -256,25 +236,18 @@ export default function Neo4jD3(selector, _options) {
     });
     return graph;
   }
-
   function init(selector, _options) {
     merge(options, _options);
-
     if (options.hasOwnProperty("neo4jData")) {
       const data = neo4jDataToD3Data(options.neo4jData);
       const container = d3.select(selector);
       container.attr("class", "neo4jd3").html("");
-
       if (options?.infoPanel) {
         info = appendInfoPanel(container);
       }
-
       const relationships = _relationships(data.relationships);
-
       const nodes = data.nodes;
-
       const types = _types(relationships);
-
       const svg = container.append("svg").attr("width", "100%").attr("height", "100%").attr("class", "neo4jd3-graph");
       const simulation = d3.forceSimulation(nodes).force("charge", d3.forceManyBody().strength(options.strength)).force("link", d3.forceLink(relationships).id(function (d) {
         return d.id;
@@ -308,7 +281,6 @@ export default function Neo4jD3(selector, _options) {
       });
     }
   }
-
   return {
     neo4jDataToD3Data: neo4jDataToD3Data,
     size: size,
