@@ -70,7 +70,7 @@ export default function Neo4jD3(selector, _options) {
   }
 
   function merge(target, source) {
-    Object.keys(source).forEach(function (property) {
+    Object.keys(source).forEach(function(property) {
       target[property] = source[property];
     });
   }
@@ -80,7 +80,7 @@ export default function Neo4jD3(selector, _options) {
 
     s += " (<id>: " + d.id;
 
-    Object.keys(d.properties).forEach(function (property) {
+    Object.keys(d.properties).forEach(function(property) {
       s += ", " + property + ": " + JSON.stringify(d.properties[property]);
     });
 
@@ -90,7 +90,7 @@ export default function Neo4jD3(selector, _options) {
   }
 
   function contains(array, id) {
-    var filter = array.filter(function (elem) {
+    var filter = array.filter(function(elem) {
       return elem.id === id;
     });
     return filter.length > 0;
@@ -138,10 +138,10 @@ export default function Neo4jD3(selector, _options) {
       .html("<strong>" + property + "</strong>" + (value ? ": " + value : ""));
     if (!value) {
       elem
-        .style("color", function (d) {
+        .style("color", function(d) {
           return property ? class2color(property) : defaultColor();
         })
-        .style("border-color", function (d) {
+        .style("border-color", function(d) {
           return property ? class2darkenColor(property) : defaultDarkenColor();
         });
     }
@@ -189,7 +189,7 @@ export default function Neo4jD3(selector, _options) {
 
     appendInfoElementProperty("property", "id", d.id);
 
-    Object.keys(d.properties).forEach(function (property) {
+    Object.keys(d.properties).forEach(function(property) {
       appendInfoElementProperty(
         "property",
         property,
@@ -229,19 +229,19 @@ export default function Neo4jD3(selector, _options) {
       nodes: [],
       relationships: [],
     };
-    data.results.forEach(function (result) {
-      result.data.forEach(function (data) {
-        data.graph.nodes.forEach(function (node) {
+    data?.results?.forEach(function(result) {
+      result.data.forEach(function(data) {
+        data.graph.nodes.forEach(function(node) {
           if (!contains(graph.nodes, node.id)) {
             graph.nodes.push(node);
           }
         });
-        data.graph.relationships.forEach(function (relationship) {
+        data.graph.relationships.forEach(function(relationship) {
           relationship.source = relationship.startNode;
           relationship.target = relationship.endNode;
           graph.relationships.push(relationship);
         });
-        data.graph.relationships.sort(function (a, b) {
+        data.graph.relationships.sort(function(a, b) {
           if (a.source > b.source) {
             return 1;
           } else if (a.source < b.source) {
@@ -261,9 +261,9 @@ export default function Neo4jD3(selector, _options) {
           if (
             i !== 0 &&
             data.graph.relationships[i].source ===
-              data.graph.relationships[i - 1].source &&
+            data.graph.relationships[i - 1].source &&
             data.graph.relationships[i].target ===
-              data.graph.relationships[i - 1].target
+            data.graph.relationships[i - 1].target
           ) {
             data.graph.relationships[i].linknum =
               data.graph.relationships[i - 1].linknum + 1;
@@ -300,10 +300,10 @@ export default function Neo4jD3(selector, _options) {
           "link",
           d3
             .forceLink(relationships)
-            .id(function (d) {
+            .id(function(d) {
               return d.id;
             })
-            .distance(function (d) {
+            .distance(function(d) {
               return options.distance;
             })
         )
@@ -320,7 +320,7 @@ export default function Neo4jD3(selector, _options) {
         .attr("fill", "none")
         .attr("stroke-width", 4)
         .selectAll("g")
-        .data(relationships, function (d) {
+        .data(relationships, function(d) {
           return d.id;
         })
         .join("g")
@@ -328,7 +328,7 @@ export default function Neo4jD3(selector, _options) {
       const relationshipArc = svg
         .selectAll(".relationship")
         .append("path")
-        .attr("id", function (d, i) {
+        .attr("id", function(d, i) {
           return "edgepath" + i;
         })
         .join("path")
@@ -341,10 +341,10 @@ export default function Neo4jD3(selector, _options) {
         .attr("font-size", options.labelFontSize)
         .attr("class", "text")
         .append("textPath")
-        .attr("xlink:xlink:href", function (d, i) {
+        .attr("xlink:xlink:href", function(d, i) {
           return "#edgepath" + i;
         })
-        .text(function (d) {
+        .text(function(d) {
           return `___${d.type}`;
         });
       const allNodes = svg
@@ -356,15 +356,15 @@ export default function Neo4jD3(selector, _options) {
         .attr("stroke-linejoin", "round")
         .attr("cursor", "pointer")
         .selectAll("g")
-        .data(nodes, function (d) {
+        .data(nodes, function(d) {
           return d.id;
         })
         .join("g")
         .attr("class", "node")
-        .on("mouseover", function (e, d) {
+        .on("mouseover", function(e, d) {
           if (info) updateInfo(d);
         })
-        .on("mouseleave", function (e, d) {
+        .on("mouseleave", function(e, d) {
           if (info) clearInfo(d);
         })
         .call(drag(simulation));
@@ -375,10 +375,10 @@ export default function Neo4jD3(selector, _options) {
         .attr("fill", (d) => class2color(d.labels[0]))
         .attr("r", 17)
         .append("title")
-        .text(function (d) {
+        .text(function(d) {
           return toString(d);
         });
-      simulation.on("tick", function () {
+      simulation.on("tick", function() {
         relationshipArc.attr("d", linkArc);
         allNodes.attr("transform", (d) => `translate(${d.x},${d.y})`);
       });
