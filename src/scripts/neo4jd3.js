@@ -5,18 +5,12 @@
 import * as d3 from "d3";
 
 export default function Neo4jD3(selector, _options) {
-  var container,
-    graph,
-    info,
+  var info,
     classes2colors = {},
     numClasses = 0,
-    node,
     nodes,
-    relationship,
     relationships,
     selector,
-    simulation,
-    svg,
     options = {
       colors: colors(),
       neo4jData: undefined,
@@ -131,17 +125,17 @@ export default function Neo4jD3(selector, _options) {
     return container.append("div").attr("class", "neo4jd3-info");
   }
 
-  function appendInfoElement(cls, isNode, property, value) {
+  function appendInfoElement(cls, property, value) {
     var elem = info.append("div");
     elem
       .attr("class", cls)
       .html("<strong>" + property + "</strong>" + (value ? ": " + value : ""));
     if (!value) {
       elem
-        .style("color", function (d) {
+        .style("color", function () {
           return property ? class2color(property) : defaultColor();
         })
-        .style("border-color", function (d) {
+        .style("border-color", function () {
           return property ? class2darkenColor(property) : defaultDarkenColor();
         });
     }
@@ -287,7 +281,6 @@ export default function Neo4jD3(selector, _options) {
       }
       const relationships = _relationships(data.relationships);
       const nodes = data.nodes;
-      const types = _types(relationships);
       const svg = container
         .append("svg")
         .attr("width", "100%")
@@ -301,10 +294,10 @@ export default function Neo4jD3(selector, _options) {
           d3
             .forceLink(relationships)
             .id(function (d) {
-              return d.id;
+              return d?.id;
             })
-            .distance(function (d) {
-              return options.distance;
+            .distance(function () {
+              return options?.distance | 150;
             })
         )
         .force(
@@ -314,7 +307,7 @@ export default function Neo4jD3(selector, _options) {
             svg.node().parentElement.parentElement.clientHeight / 2
           )
         );
-      const svgRelationships = svg
+      svg
         .append("g")
         .attr("class", "relationships")
         .attr("fill", "none")
@@ -333,7 +326,7 @@ export default function Neo4jD3(selector, _options) {
         })
         .join("path")
         .attr("stroke", (d) => class2color(d.type));
-      const relationshipLabel = svg
+      svg
         .selectAll(".relationship")
         .append("text")
         .attr("class", "text")

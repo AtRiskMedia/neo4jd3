@@ -4,18 +4,12 @@
 
 import * as d3 from "d3";
 export default function Neo4jD3(selector, _options) {
-  var container,
-    graph,
-    info,
+  var info,
     classes2colors = {},
     numClasses = 0,
-    node,
     nodes,
-    relationship,
     relationships,
     selector,
-    simulation,
-    svg,
     options = {
       colors: colors(),
       neo4jData: undefined,
@@ -125,13 +119,13 @@ export default function Neo4jD3(selector, _options) {
   function appendInfoPanel(container) {
     return container.append("div").attr("class", "neo4jd3-info");
   }
-  function appendInfoElement(cls, isNode, property, value) {
+  function appendInfoElement(cls, property, value) {
     var elem = info.append("div");
     elem.attr("class", cls).html("<strong>" + property + "</strong>" + (value ? ": " + value : ""));
     if (!value) {
-      elem.style("color", function (d) {
+      elem.style("color", function () {
         return property ? class2color(property) : defaultColor();
-      }).style("border-color", function (d) {
+      }).style("border-color", function () {
         return property ? class2darkenColor(property) : defaultDarkenColor();
       });
     }
@@ -247,20 +241,19 @@ export default function Neo4jD3(selector, _options) {
       }
       const relationships = _relationships(data.relationships);
       const nodes = data.nodes;
-      const types = _types(relationships);
       const svg = container.append("svg").attr("width", "100%").attr("height", "100%").attr("class", "neo4jd3-graph");
       const simulation = d3.forceSimulation(nodes).force("charge", d3.forceManyBody().strength(options.strength)).force("link", d3.forceLink(relationships).id(function (d) {
-        return d.id;
-      }).distance(function (d) {
-        return options.distance;
+        return d?.id;
+      }).distance(function () {
+        return options?.distance | 150;
       })).force("center", d3.forceCenter(svg.node().parentElement.parentElement.clientWidth / 2, svg.node().parentElement.parentElement.clientHeight / 2));
-      const svgRelationships = svg.append("g").attr("class", "relationships").attr("fill", "none").attr("stroke-width", 4).selectAll("g").data(relationships, function (d) {
+      svg.append("g").attr("class", "relationships").attr("fill", "none").attr("stroke-width", 4).selectAll("g").data(relationships, function (d) {
         return d.id;
       }).join("g").attr("class", "relationship");
       const relationshipArc = svg.selectAll(".relationship").append("path").attr("id", function (d, i) {
         return "edgepath" + i;
       }).join("path").attr("stroke", d => class2color(d.type));
-      const relationshipLabel = svg.selectAll(".relationship").append("text").attr("class", "text").attr("fill", "#000").attr("font-size", options.labelFontSize).attr("class", "text").append("textPath").attr("xlink:xlink:href", function (d, i) {
+      svg.selectAll(".relationship").append("text").attr("class", "text").attr("fill", "#000").attr("font-size", options.labelFontSize).attr("class", "text").append("textPath").attr("xlink:xlink:href", function (d, i) {
         return "#edgepath" + i;
       }).text(function (d) {
         return `___${d.type}`;
