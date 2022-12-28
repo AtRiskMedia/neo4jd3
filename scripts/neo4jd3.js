@@ -199,8 +199,8 @@ export default function Neo4jD3(selector, _options) {
           }
         });
         data.graph.relationships.forEach(function (relationship) {
-          relationship.source = relationship.startNode;
-          relationship.target = relationship.endNode;
+          relationship.source = relationship.startNode | relationship.startNodeId;
+          relationship.target = relationship.endNode | relationship.endNodeId;
           graph.relationships.push(relationship);
         });
         data.graph.relationships.sort(function (a, b) {
